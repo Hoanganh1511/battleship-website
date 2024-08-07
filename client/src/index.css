@@ -1,15 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
   color-scheme: light dark;
-  /* background-color: #242424; */
   color: black;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+}
+* {
+  font-family: "Balsamiq Sans", sans-serif;
 }
 
 a {
@@ -21,21 +18,20 @@ a:hover {
   color: #535bf2;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
 }
 .name-game {
   text-align: center;
+  font-family: "Balsamiq Sans", sans-serif;
 }
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -50,6 +46,11 @@ h1 {
 }
 .header > .player.p2 {
   align-items: end;
+}
+.header > .player > .name {
+  text-align: center;
+  display: block;
+  width: 100%;
 }
 .header > .player > .connected {
   display: flex;
@@ -72,33 +73,96 @@ h1 {
 }
 .header > .player > .ready {
   margin-top: 12px;
-  padding: 2px 12px;
+  padding: 4px 12px;
   border: 1px solid rgba(0, 0, 0, 0.5);
   border-radius: 4px;
   cursor: pointer;
+  font-size: 15px;
   transition: 0.1s linear;
 }
 .header > .player > .ready:hover {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
-.container {
+.battleship-container {
   display: flex;
+  justify-content: space-between;
   gap: 60px;
 }
+.battleship-container .battleship-area__area .name {
+  text-transform: uppercase;
+  text-align: center;
+  padding: 12px 0;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  letter-spacing: 1.2px;
+  font-weight: 600;
+  background-color: #717c96;
+  color: white;
+}
+.battleship-container .battleship-area__area.your-turn .name {
+  background-color: #0364ee;
+  color: white;
+}
+.battleship-container .battleship-area__area.opponent-turn .name {
+  background-color: #ff0055;
+  color: white;
+}
 .battleship-grid {
+  margin-top: 60px;
+  position: relative;
   display: grid;
   gap: 4px;
   border-radius: 4px;
   background-color: white;
-  grid-template-rows: repeat(10, 4.6vmin);
-  grid-template-columns: repeat(10, 4.6vmin);
+  grid-template-rows: repeat(10, 40px);
+  grid-template-columns: repeat(10, 40px);
 }
+.battleship-grid .row {
+  position: absolute;
+  top: -32px;
+  left: 0;
+  display: flex;
+  gap: 4px;
+}
+.battleship-grid .row > span {
+  display: flex;
+  width: 40px;
+  height: 20px;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #717c96;
+}
+
+.battleship-grid .col {
+  position: absolute;
+  left: -32px;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.battleship-grid .col > span {
+  display: flex;
+  width: 20px;
+  height: 40px;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #717c96;
+}
+
 .square {
   border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
   cursor: pointer;
   transition: 0.06s linear;
+  background-color: #e5e5e5;
+}
+.square.your-square {
+  background-color: rgba(97, 198, 255, 0.2);
 }
 .square:not(.taken):hover {
   background-color: rgba(0, 0, 0, 0.15);
