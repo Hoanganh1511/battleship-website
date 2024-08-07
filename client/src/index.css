@@ -1,0 +1,110 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  /* background-color: #242424; */
+  color: black;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+.name-game {
+  text-align: center;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.header > .player {
+  display: flex;
+  flex-direction: column;
+}
+.header > .player.p1 {
+  align-items: start;
+}
+.header > .player.p2 {
+  align-items: end;
+}
+.header > .player > .connected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header > .player > .connected .badge {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: block;
+  background-color: #52c41a;
+}
+
+.header > .player p {
+  color: #3fa2f6;
+  font-weight: semibold;
+  font-size: 20px;
+}
+.header > .player > .ready {
+  margin-top: 12px;
+  padding: 2px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.1s linear;
+}
+.header > .player > .ready:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.container {
+  display: flex;
+  gap: 60px;
+}
+.battleship-grid {
+  display: grid;
+  gap: 4px;
+  border-radius: 4px;
+  background-color: white;
+  grid-template-rows: repeat(10, 4.6vmin);
+  grid-template-columns: repeat(10, 4.6vmin);
+}
+.square {
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: 0.06s linear;
+}
+.square:not(.taken):hover {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+.taken,
+.ship {
+  position: relative;
+  background-color: blue;
+}
