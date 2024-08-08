@@ -4,7 +4,10 @@ function App() {
   const userSquares = [];
   const computerSquares = [];
   const width = 10;
-
+  let selectedShipNameWithIndex;
+  let draggedShip;
+  let draggedShipLength;
+  const ships = document.querySelectorAll(".ship");
   const shipArray = [
     {
       name: "destroyer",
@@ -65,37 +68,78 @@ function App() {
     const isAtLeftEdge = current.some(
       (index) => (randomStart + index) % (width === 0)
     );
-
     if (!isTaken && !isAtRightEdge && !isAtLeftEdge)
       current.forEach((index) => {
         computerSquares[randomStart + index].classList.add("taken", ship.name);
       });
     else generate(ship);
-    console.log(123, ship);
   }
-  useLayoutEffect(() => {
-    const userGrid = document.querySelector(".grid-user");
-    const computerGrid = document.querySelector(".grid-computer");
-    const createBoard = (grid, squares, type) => {
-      for (let i = 0; i < width * width; i++) {
-        const square = document.createElement("div");
-        type === "your" && square.classList.add("square", "your-square");
-        type === "opponent" && square.classList.add("square");
-        square.dataset.id = i;
-        grid.appendChild(square);
-        squares.push(square);
+  function dragStart(e) {
+    console.log("start", e.target);
+    // draggedShip = this;
+    draggedShipLength = e.target.childNodes.length;
+    // draggedShipLength = this.childNodes.length;
+  }
+  function dragOver(e) {
+    e.preventDefault();
+  }
+  function dragEnter(e) {
+    e.preventDefault();
+  }
+  function dragLeave() {}
+  function dragDrop(e) {
+    console.log("drop", e.target);
+    // let shipNameWithLastId = draggedShip.lastChild.id;
+    // let shipClass = shipNameWithLastId.slice(0, -2);
+    // console.log(151, shipNameWithLastId, shipClass);
+  }
+  function dragEnd() {}
+  useEffect(() => {
+    if (ships) {
+      const userGrid = document.querySelector(".grid-user");
+      const computerGrid = document.querySelector(".grid-computer");
+      const createBoard = (grid, squares, type) => {
+        for (let i = 0; i < width * width; i++) {
+          const square = document.createElement("div");
+          type === "your" && square.classList.add("square", "your-square");
+          type === "opponent" && square.classList.add("square");
+          square.dataset.id = i;
+          grid.appendChild(square);
+          squares.push(square);
+        }
+      };
+      if (userGrid && userSquares && computerGrid && computerSquares) {
+        createBoard(userGrid, userSquares, "your");
+        createBoard(computerGrid, computerSquares, "opponent");
       }
-    };
-    if (userGrid && userSquares && computerGrid && computerSquares) {
-      createBoard(userGrid, userSquares, "your");
-      createBoard(computerGrid, computerSquares, "opponent");
+      generate(shipArray[0]);
+      generate(shipArray[1]);
+      generate(shipArray[2]);
+      generate(shipArray[3]);
+      generate(shipArray[4]);
+
+      ships.forEach((ship) => ship.addEventListener("dragstart", dragStart));
+      console.log("ships", ships);
+      userSquares.forEach((square) =>
+        square.addEventListener("dragstart", dragStart)
+      );
+      userSquares.forEach((square) =>
+        square.addEventListener("dragover", dragOver)
+      );
+      userSquares.forEach((square) =>
+        square.addEventListener("dragstart", dragEnter)
+      );
+      userSquares.forEach((square) =>
+        square.addEventListener("dragleave", dragLeave)
+      );
+      userSquares.forEach((square) =>
+        square.addEventListener("drop", dragDrop)
+      );
+      userSquares.forEach((square) =>
+        square.addEventListener("dragend", dragEnd)
+      );
     }
-    generate(shipArray[0]);
-    generate(shipArray[1]);
-    generate(shipArray[2]);
-    generate(shipArray[3]);
-    generate(shipArray[4]);
-  }, []);
+  }, [ships]);
   // Create board
 
   return (
@@ -179,6 +223,35 @@ function App() {
                 <span>10</span>
               </div>
             </div>
+          </div>
+        </div>
+        <div className="grid-display">
+          <div className="ship destroyer-container" draggable="true">
+            <div id="destroyer-0"></div>
+            <div id="destroyer-1"></div>
+          </div>
+          <div className="ship submarine-container" draggable="true">
+            <div id="submarine-0"></div>
+            <div id="submarine-1"></div>
+            <div id="submarine-2"></div>
+          </div>
+          <div className="ship cruiser-container" draggable="true">
+            <div id="cruiser-0"></div>
+            <div id="cruiser-1"></div>
+            <div id="cruiser-2"></div>
+          </div>
+          <div className="ship fourship-container" draggable="true">
+            <div id="fourship-0"></div>
+            <div id="fourship-1"></div>
+            <div id="fourship-2"></div>
+            <div id="fourship-3"></div>
+          </div>
+          <div className="ship carrier-container" draggable="true">
+            <div id="carrier-0"></div>
+            <div id="carrier-1"></div>
+            <div id="carrier-2"></div>
+            <div id="carrier-3"></div>
+            <div id="carrier-4"></div>
           </div>
         </div>
       </div>
