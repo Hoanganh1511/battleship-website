@@ -172,28 +172,31 @@ h1 {
   background-color: blue;
 }
 
-.grid-display {
+.grid-display-ships {
   margin-top: 30px;
   width: 400px;
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
 }
-.grid-display .ship {
+.grid-display-ships .ship {
   display: flex;
 }
-.grid-display .ship:hover {
+.grid-display-ships .ship:hover {
   transform: scale(1.04);
   transition: 0.2 linear;
   cursor: pointer;
 }
-.grid-display .ship > div {
+.grid-display-ships .ship > div {
   width: 28px;
   height: 28px;
   background-color: #d1d2de;
   position: relative;
 }
-.grid-display .ship > div:after {
+.grid-display-ships .ship div:hover {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+.grid-display-ships .ship > div:after {
   position: absolute;
   content: "";
   width: 12px;

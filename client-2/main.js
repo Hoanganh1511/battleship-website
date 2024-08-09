@@ -8,7 +8,9 @@ let draggedShip;
 let draggedShipLength;
 let direction;
 let bannedSquares = [];
+let killedShips = [];
 const ships = document.querySelectorAll(".ship");
+const opponentStatusShips = document.querySelectorAll(".ship-opponent");
 const shipArray = [
   {
     name: "destroyer",
@@ -161,4 +163,17 @@ userSquares.forEach((square) =>
 userSquares.forEach((square) => square.addEventListener("drop", dragDrop));
 userSquares.forEach((square) => square.addEventListener("dragend", dragEnd));
 
-// Create board
+//Check log killed ships of opponent
+opponentStatusShips.forEach((ship) => {
+  ship.addEventListener("click", (e) => {
+    if (killedShips.includes(e.target.classList[1])) {
+      e.target.classList.remove("active");
+      killedShips = killedShips.filter(
+        (item) => item !== e.target.classList[1]
+      );
+    } else {
+      killedShips.push(e.target.classList[1]);
+      e.target.classList.add("active");
+    }
+  });
+});
