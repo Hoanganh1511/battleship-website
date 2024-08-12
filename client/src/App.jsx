@@ -1,19 +1,20 @@
 /* eslint-disable no-unused-vars */
-import { useState, useEffect, useLayoutEffect } from "react";
-function App() {
-  let userSquares = [];
-  const computerSquares = [];
-  const width = 10;
-  // let selectedShipNameWithIndex;
+import React, { useState, useEffect, useRef } from "react";
+
+const BattleshipGame = () => {
+  const [userSquares, setUserSquares] = useState([]);
+  const [computerSquares, setComputerSquares] = useState([]);
   const [selectedShipNameWithIndex, setSelectedShipNameWithIndex] =
     useState("");
-  let draggedShip;
-  let draggedShipLength;
-  let direction;
-  let bannedSquares = [];
-  let killedShips = [];
-  const ships = document.querySelectorAll(".ship");
-  const opponentStatusShips = document.querySelectorAll(".ship-opponent");
+  const [draggedShip, setDraggedShip] = useState(null);
+  const [draggedShipLength, setDraggedShipLength] = useState(null);
+  const [bomd, setBomb] = useState([]);
+  // const [direction, setDirection] = useState(null);
+  const [bannedSquares, setBannedSquares] = useState([]);
+  const [killedShips, setKilledShips] = useState([]);
+  const displayGridRef = useRef(null);
+
+  const width = 10;
   const shipArray = [
     {
       name: "destroyer",
@@ -52,252 +53,314 @@ function App() {
     },
   ];
 
-  ships.forEach((ship) =>
-    ship.addEventListener("mousedown", (e) => {
-      setSelectedShipNameWithIndex(e.target.id);
-    })
-  );
-  function generate(ship) {
-    let randomDirection = Math.floor(Math.random() * ship.directions.length);
-    let current = ship.directions[randomDirection];
-    if (randomDirection === 0) direction = 1;
-    if (randomDirection === 1) direction = 10;
+  useEffect(() => {
+    const createBoard = (squares, type) => {
+      let newSquares = [];
+      for (let i = 0; i < width * width; i++) {
+        newSquares.push({
+          id: i,
+          classList: [
+            "square",
+            type === "your" ? "your-square" : "opponent-square",
+          ],
+        });
+      }
+      return newSquares;
+    };
 
-    let randomStart = Math.abs(
-      Math.floor(
-        Math.random() * computerSquares.length -
-          ship.directions[0].length * direction
-      )
-    );
+    setUserSquares(createBoard(userSquares, "your"));
+    setComputerSquares(createBoard(computerSquares, "opponent"));
+  }, []);
 
-    const isTaken = current.some((index) =>
-      computerSquares[randomStart + index].classList.contains("taken")
-    );
-    const isAtRightEdge = current.some(
-      (index) => (randomStart + index) % width === width - 1
-    );
-    const isAtLeftEdge = current.some(
-      (index) => (randomStart + index) % (width === 0)
-    );
-    if (!isTaken && !isAtRightEdge && !isAtLeftEdge)
-      current.forEach((index) => {
-        computerSquares[randomStart + index].classList.add("taken", ship.name);
-      });
-    else generate(ship);
-  }
+  const handleMouseDown = (e) => {
+    setSelectedShipNameWithIndex(e.target.id);
+  };
 
-  // Lấy thông tin thuyền được kéo vào
-  function dragStart(e) {
-    draggedShip = e.target;
-    draggedShipLength = e.target.children.length;
-  }
-  function dragOver(e) {
+  const handleDragStart = (e) => {
+    setDraggedShip(e);
+    setDraggedShipLength(e.target.children.length);
+  };
+
+  const handleDragOver = (e) => {
     e.preventDefault();
-  }
-  function dragEnter(e) {
-    e.preventDefault();
-  }
-  function dragLeave() {}
-  // Thông tin vị trí được kéo vào
-  function dragDrop(e) {
-    console.log("drop", e);
+  };
 
-    let shipNameWithLastId = draggedShip.lastElementChild.id;
-    console.log("ship name last id =>", shipNameWithLastId);
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDragDrop = (e) => {
+    console.log("dragged ship", draggedShip);
+    console.log("drag drop", e);
+    let draggedSquareId = parseInt(e.target.id);
+    let groupSquare = Math.floor(Number(e.target.id) / 10) * 10;
+    let shipNameWithLastId = draggedShip.target.lastElementChild.id;
     let shipClass = shipNameWithLastId.slice(0, -2);
-    console.log("ship class =>", shipClass);
+    console.log("shipname", shipNameWithLastId);
     let lastShipIndex = parseInt(shipNameWithLastId.substr(-1));
-    console.log("last ship Index =>", lastShipIndex);
-    let shipLastId = lastShipIndex + parseInt(this.dataset.id);
-    console.log("ship last id =>", shipLastId);
-    bannedSquares.push(shipLastId + 1, parseInt(this.dataset.id) - 1);
-    console.log("banned squares =>", bannedSquares);
     let selectedShipIndex = parseInt(selectedShipNameWithIndex.substr(-1));
-    for (let i = 0; i < draggedShipLength; i++) {
-      userSquares[
-        parseInt(this.dataset.id) - selectedShipIndex + i
-      ].classList.add("taken", shipClass);
-    }
-    // console.log(
-    //   selectedShipIndex,
-    //   userSquares[parseInt(this.dataset.id) - selectedShipIndex + 1].classList
-    // );
-    // console.log(shipNameWithLastId, shipClass, lastShipIndex, shipLastId);
-    // const listIndexShip =
-    // 96 97 98
-    // banned 86,87,88,95,99,
-    //
-  }
-  function dragEnd() {}
 
-  const userGrid = document.querySelector(".grid-user");
-  const computerGrid = document.querySelector(".grid-computer");
-  const createBoard = (grid, squares, type) => {
-    for (let i = 0; i < width * width; i++) {
-      const square = document.createElement("div");
-      type === "your" && square.classList.add("square", "your-square");
-      type === "opponent" && square.classList.add("square");
-      square.dataset.id = i;
-      grid.appendChild(square);
-      squares.push(square);
+    let idSquareOnLastShip =
+      lastShipIndex + draggedSquareId - selectedShipIndex;
+    let idSquareOnFirstShip = idSquareOnLastShip - lastShipIndex;
+    // console.log(111, lastShipIndex, draggedSquareId, selectedShipIndex);
+    console.table({
+      "selected ship index": selectedShipIndex,
+      "last ship index": lastShipIndex,
+      groupSquare: groupSquare,
+      "id square first ship": idSquareOnFirstShip,
+      "id square last ship": idSquareOnLastShip,
+      "ship class": shipClass,
+    });
+    if (
+      groupSquare + 9 >= idSquareOnLastShip &&
+      groupSquare <= idSquareOnFirstShip &&
+      !bannedSquares.includes(idSquareOnLastShip) &&
+      !bannedSquares.includes(idSquareOnFirstShip) &&
+      !bannedSquares.includes(draggedSquareId)
+    ) {
+      let newSquares = [...userSquares];
+      for (let i = 0; i < draggedShipLength; i++) {
+        console.log(newSquares[parseInt(e.target.id) - selectedShipIndex + i]);
+        newSquares[
+          parseInt(e.target.id) - selectedShipIndex + i
+        ].classList.push(`taken ${shipClass}`);
+      }
+      setUserSquares(newSquares);
+
+      let newBannedSquares = [
+        ...bannedSquares,
+        idSquareOnLastShip < groupSquare && idSquareOnLastShip + 1,
+        idSquareOnFirstShip > groupSquare && idSquareOnFirstShip - 1,
+        idSquareOnFirstShip - 10,
+        idSquareOnLastShip - 10,
+        idSquareOnFirstShip + 10,
+        idSquareOnLastShip + 10,
+        draggedSquareId - 10,
+        draggedSquareId + 10,
+      ];
+      setBannedSquares(newBannedSquares);
+      displayGridRef.current.removeChild(draggedShip.target);
+    } else {
+      alert("Invalid position!");
     }
   };
-  if (userGrid && userSquares && computerGrid && computerSquares) {
-    createBoard(userGrid, userSquares, "your");
-    createBoard(computerGrid, computerSquares, "opponent");
-  }
-  generate(shipArray[0]);
-  generate(shipArray[1]);
-  generate(shipArray[2]);
-  generate(shipArray[3]);
-  generate(shipArray[4]);
 
-  ships.forEach((ship) => ship.addEventListener("dragstart", dragStart));
-  userSquares.forEach((square) =>
-    square.addEventListener("dragstart", dragStart)
-  );
-  userSquares.forEach((square) =>
-    square.addEventListener("dragover", dragOver)
-  );
-  userSquares.forEach((square) =>
-    square.addEventListener("dragstart", dragEnter)
-  );
-  userSquares.forEach((square) =>
-    square.addEventListener("dragleave", dragLeave)
-  );
-  userSquares.forEach((square) => square.addEventListener("drop", dragDrop));
-  userSquares.forEach((square) => square.addEventListener("dragend", dragEnd));
-
-  //Check log killed ships of opponent
-  opponentStatusShips.forEach((ship) => {
-    ship.addEventListener("click", (e) => {
-      if (killedShips.includes(e.target.classList[1])) {
-        e.target.classList.remove("active");
-        killedShips = killedShips.filter(
-          (item) => item !== e.target.classList[1]
-        );
-      } else {
-        killedShips.push(e.target.classList[1]);
-        e.target.classList.add("active");
-      }
-    });
-  });
+  const handleShipClick = (e) => {
+    const shipClass = e.target.classList[1];
+    if (killedShips.includes(shipClass)) {
+      setKilledShips(killedShips.filter((item) => item !== shipClass));
+      e.target.classList.remove("active");
+    } else {
+      setKilledShips([...killedShips, shipClass]);
+      e.target.classList.add("active");
+    }
+  };
 
   return (
-    <>
-      <h1 className="name-game">Battle ship</h1>
-      <div className="container">
-        <div className="header">
-          <div className="player p1">
-            <label>Player1</label>
-            <div className="connected">
-              <span className="badge"></span>
-              <span>Connected</span>
-            </div>
-            <div className="ready">Ready</div>
+    <div className="container">
+      <div className="header">
+        <div className="player p1">
+          <label>Player 1</label>
+          <div className="connected">
+            <span className="badge"></span>
+            <span>Connected</span>
           </div>
-          <div className="player p2">
-            <label>Player2</label>
-            <div className="connected">
-              <span>Connected</span>
-              <span className="badge"></span>
-            </div>
-            <div className="ready">Ready</div>
-          </div>
+          <div className="ready">Ready</div>
         </div>
+        <div className="player p2">
+          <label>Player 2</label>
+          <div className="connected">
+            <span>Connected</span>
+            <span className="badge"></span>
+          </div>
+          <div className="ready">Ready</div>
+        </div>
+      </div>
 
-        <div className="battleship-container">
-          <div className="battleship-area__area your-turn">
-            <div className="name">Your Turn</div>
-            <div className="battleship-grid grid-user">
-              <div className="row">
-                <span>A</span>
-                <span>B</span>
-                <span>C</span>
-                <span>D</span>
-                <span>E</span>
-                <span>F</span>
-                <span>G</span>
-                <span>H</span>
-                <span>I</span>
-                <span>J</span>
-              </div>
-              <div className="col">
-                <span>1</span>
-                <span>2</span>
-                <span>3</span>
-                <span>4</span>
-                <span>5</span>
-                <span>6</span>
-                <span>7</span>
-                <span>8</span>
-                <span>9</span>
-                <span>10</span>
-              </div>
+      <div className="battleship-container">
+        <div className="battleship-area__area your-turn">
+          <div className="name">Your Turn</div>
+          <div className="battleship-grid grid-user">
+            {userSquares &&
+              userSquares.map((square, id) => {
+                return (
+                  <div
+                    className={square.classList.join(" ")}
+                    key={id}
+                    id={id}
+                    data-id={square.id}
+                    onDragOver={handleDragOver}
+                    onDragEnter={handleDragEnter}
+                    onDrop={handleDragDrop}
+                  ></div>
+                );
+              })}
+            <div className="row">
+              <span>A</span>
+              <span>B</span>
+              <span>C</span>
+              <span>D</span>
+              <span>E</span>
+              <span>F</span>
+              <span>G</span>
+              <span>H</span>
+              <span>I</span>
+              <span>J</span>
+            </div>
+            <div className="col">
+              <span>1</span>
+              <span>2</span>
+              <span>3</span>
+              <span>4</span>
+              <span>5</span>
+              <span>6</span>
+              <span>7</span>
+              <span>8</span>
+              <span>9</span>
+              <span>10</span>
             </div>
           </div>
-          <div className="battleship-area__area opponent-turn">
-            <div className="name">Opponent Turn</div>
-            <div className="battleship-grid grid-computer">
-              <div className="row">
-                <span>A</span>
-                <span>B</span>
-                <span>C</span>
-                <span>D</span>
-                <span>E</span>
-                <span>F</span>
-                <span>G</span>
-                <span>H</span>
-                <span>I</span>
-                <span>J</span>
-              </div>
-              <div className="col">
-                <span>1</span>
-                <span>2</span>
-                <span>3</span>
-                <span>4</span>
-                <span>5</span>
-                <span>6</span>
-                <span>7</span>
-                <span>8</span>
-                <span>9</span>
-                <span>10</span>
-              </div>
+          <div className="grid-display-ships " ref={displayGridRef}>
+            <div
+              onDragStart={handleDragStart}
+              className="ship destroyer-container"
+              draggable="true"
+            >
+              <div id="destroyer-0" onMouseDown={handleMouseDown}></div>
+              <div id="destroyer-1" onMouseDown={handleMouseDown}></div>
+            </div>
+            <div
+              onDragStart={handleDragStart}
+              className="ship submarine-container"
+              draggable="true"
+            >
+              <div id="submarine-0" onMouseDown={handleMouseDown}></div>
+              <div id="submarine-1" onMouseDown={handleMouseDown}></div>
+              <div id="submarine-2" onMouseDown={handleMouseDown}></div>
+            </div>
+            <div
+              onDragStart={handleDragStart}
+              className="ship cruiser-container"
+              draggable="true"
+            >
+              <div id="cruiser-0" onMouseDown={handleMouseDown}></div>
+              <div id="cruiser-1" onMouseDown={handleMouseDown}></div>
+              <div id="cruiser-2" onMouseDown={handleMouseDown}></div>
+            </div>
+            <div
+              onDragStart={handleDragStart}
+              className="ship fourship-container"
+              draggable="true"
+            >
+              <div id="fourship-0" onMouseDown={handleMouseDown}></div>
+              <div id="fourship-1" onMouseDown={handleMouseDown}></div>
+              <div id="fourship-2" onMouseDown={handleMouseDown}></div>
+              <div id="fourship-3" onMouseDown={handleMouseDown}></div>
+            </div>
+            <div
+              onDragStart={handleDragStart}
+              className="ship carrier-container"
+              draggable="true"
+            >
+              <div id="carrier-0" onMouseDown={handleMouseDown}></div>
+              <div id="carrier-1" onMouseDown={handleMouseDown}></div>
+              <div id="carrier-2" onMouseDown={handleMouseDown}></div>
+              <div id="carrier-3" onMouseDown={handleMouseDown}></div>
+              <div id="carrier-4" onMouseDown={handleMouseDown}></div>
+            </div>
+          </div>
+          <div className="bomb-container">
+            <div className="bomb bomb-a">
+              <img src="bomb-a.png" />
+              <div className="amount">0</div>
+            </div>
+            <div className="bomb bomb-b">
+              {" "}
+              <img src="bomb-b.png" />
+              <div className="amount">0</div>
+            </div>
+
+            <div className="bomb bomb-s">
+              {" "}
+              <img src="bomb-s.png" />
+              <div className="amount">0</div>
             </div>
           </div>
         </div>
-        <div className="grid-display">
-          <div className="ship destroyer-container" draggable="true">
-            <div id="destroyer-0"></div>
-            <div id="destroyer-1"></div>
+        <div className="battleship-area__area opponent-turn">
+          <div className="name">Opponent Turn</div>
+          <div className="battleship-grid grid-computer">
+            {computerSquares.map((square, id) => {
+              return (
+                <div className={square.classList.join(" ")} key={id} id={id}>
+                  <img className="aim-icon" src="aim-2.png" />
+                </div>
+              );
+            })}
+            <div className="row">
+              <span>A</span>
+              <span>B</span>
+              <span>C</span>
+              <span>D</span>
+              <span>E</span>
+              <span>F</span>
+              <span>G</span>
+              <span>H</span>
+              <span>I</span>
+              <span>J</span>
+            </div>
+            <div className="col">
+              <span>1</span>
+              <span>2</span>
+              <span>3</span>
+              <span>4</span>
+              <span>5</span>
+              <span>6</span>
+              <span>7</span>
+              <span>8</span>
+              <span>9</span>
+              <span>10</span>
+            </div>
           </div>
-          <div className="ship submarine-container" draggable="true">
-            <div id="submarine-0"></div>
-            <div id="submarine-1"></div>
-            <div id="submarine-2"></div>
-          </div>
-          <div className="ship cruiser-container" draggable="true">
-            <div id="cruiser-0"></div>
-            <div id="cruiser-1"></div>
-            <div id="cruiser-2"></div>
-          </div>
-          <div className="ship fourship-container" draggable="true">
-            <div id="fourship-0"></div>
-            <div id="fourship-1"></div>
-            <div id="fourship-2"></div>
-            <div id="fourship-3"></div>
-          </div>
-          <div className="ship carrier-container" draggable="true">
-            <div id="carrier-0"></div>
-            <div id="carrier-1"></div>
-            <div id="carrier-2"></div>
-            <div id="carrier-3"></div>
-            <div id="carrier-4"></div>
+
+          <div className="grid-display-ships-opponent">
+            <div
+              className="ship-opponent destroyer-container"
+              onClick={handleShipClick}
+            >
+              Destroyer (2)
+            </div>
+            <div
+              className="ship-opponent submarine-container"
+              onClick={handleShipClick}
+            >
+              Submarine (3)
+            </div>
+            <div
+              className="ship-opponent cruiser-container"
+              onClick={handleShipClick}
+            >
+              Cruiser (3)
+            </div>
+            <div
+              className="ship-opponent fourship-container"
+              onClick={handleShipClick}
+            >
+              Battleship (4)
+            </div>
+            <div
+              className="ship-opponent carrier-container"
+              onClick={handleShipClick}
+            >
+              Carrier (5)
+            </div>
           </div>
         </div>
       </div>
-    </>
+      <div></div>
+    </div>
   );
-}
+};
 
-export default App;
+export default BattleshipGame;

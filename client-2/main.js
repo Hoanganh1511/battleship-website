@@ -11,6 +11,7 @@ let bannedSquares = [];
 let killedShips = [];
 const ships = document.querySelectorAll(".ship");
 const opponentStatusShips = document.querySelectorAll(".ship-opponent");
+const displayGrid = document.querySelector(".grid-display-ships");
 const shipArray = [
   {
     name: "destroyer",
@@ -85,6 +86,7 @@ function generate(ship) {
 
 // Lấy thông tin thuyền được kéo vào
 function dragStart(e) {
+  console.log("drag start =>", e);
   draggedShip = e.target;
   draggedShipLength = e.target.children.length;
 }
@@ -97,29 +99,67 @@ function dragEnter(e) {
 function dragLeave() {}
 // Thông tin vị trí được kéo vào
 function dragDrop(e) {
-  console.log("drop", e);
+  // console.log("drop", e);
+  // console.log("dragged ship", draggedShip.target);
 
+  let draggedSquareId = parseInt(this.dataset.id);
+  let groupSquare = Math.floor(Number(this.dataset.id) / 10) * 10;
+  // console.log("group square =>", groupSquare);
+  // console.log("id square drop =>", idSquareDrop);
   let shipNameWithLastId = draggedShip.lastElementChild.id;
-  console.log("ship name last id =>", shipNameWithLastId);
+  // console.log("ship name last id =>", shipNameWithLastId);
   let shipClass = shipNameWithLastId.slice(0, -2);
-  console.log("ship class =>", shipClass);
+  // console.log("ship class =>", shipClass);
   let lastShipIndex = parseInt(shipNameWithLastId.substr(-1));
-  console.log("last ship Index =>", lastShipIndex);
-  let shipLastId = lastShipIndex + parseInt(this.dataset.id);
-  console.log("ship last id =>", shipLastId);
-  bannedSquares.push(shipLastId + 1, parseInt(this.dataset.id) - 1);
-  console.log("banned squares =>", bannedSquares);
+  // console.log("last ship Index =>", lastShipIndex);
   selectedShipIndex = parseInt(selectedShipNameWithIndex.substr(-1));
-  for (let i = 0; i < draggedShipLength; i++) {
-    userSquares[
-      parseInt(this.dataset.id) - selectedShipIndex + i
-    ].classList.add("taken", shipClass);
+  let idSquareOnLastShip = lastShipIndex + draggedSquareId - selectedShipIndex;
+  let idSquareOnFirstShip = idSquareOnLastShip - lastShipIndex;
+  // console.log("ship last id =>", idSquareOnLastShip);
+
+  console.table({
+    "selected ship index": selectedShipIndex,
+    "last ship index": lastShipIndex,
+    groupSquare: groupSquare,
+    "id square first ship": idSquareOnFirstShip,
+    "id square last ship": idSquareOnLastShip,
+    "ship class": shipClass,
+  });
+  console.log(bannedSquares);
+  if (
+    groupSquare + 9 >= idSquareOnLastShip &&
+    groupSquare <= idSquareOnFirstShip &&
+    !bannedSquares.includes(idSquareOnLastShip) &&
+    !bannedSquares.includes(idSquareOnFirstShip) &&
+    !bannedSquares.includes(draggedSquareId)
+  ) {
+    for (let i = 0; i < draggedShipLength; i++) {
+      userSquares[
+        parseInt(this.dataset.id) - selectedShipIndex + i
+      ].classList.add("taken", shipClass);
+    }
+    bannedSquares.push(
+      idSquareOnLastShip < groupSquare && idSquareOnLastShip + 1,
+      idSquareOnFirstShip > groupSquare && idSquareOnFirstShip - 1,
+      idSquareOnFirstShip - 10,
+      idSquareOnLastShip - 10,
+      idSquareOnFirstShip + 10,
+      idSquareOnLastShip + 10,
+      draggedSquareId - 10,
+      draggedSquareId + 10
+    );
+    console.log(displayGrid);
+    displayGrid.removeChild(draggedShip);
+    // Remove ship dropped
+  } else {
+    alert("vị trí không hợp lệ! ");
   }
+
   // console.log(
   //   selectedShipIndex,
   //   userSquares[parseInt(this.dataset.id) - selectedShipIndex + 1].classList
   // );
-  // console.log(shipNameWithLastId, shipClass, lastShipIndex, shipLastId);
+  // console.log(shipNameWithLastId, shipClass, lastShipIndex, idSquareOnLastShip);
   // const listIndexShip =
   // 96 97 98
   // banned 86,87,88,95,99,
@@ -143,13 +183,14 @@ if (userGrid && userSquares && computerGrid && computerSquares) {
   createBoard(userGrid, userSquares, "your");
   createBoard(computerGrid, computerSquares, "opponent");
 }
-generate(shipArray[0]);
-generate(shipArray[1]);
-generate(shipArray[2]);
-generate(shipArray[3]);
-generate(shipArray[4]);
+// generate(shipArray[0]);
+// generate(shipArray[1]);
+// generate(shipArray[2]);
+// generate(shipArray[3]);
+// generate(shipArray[4]);
 
 ships.forEach((ship) => ship.addEventListener("dragstart", dragStart));
+console.log("users squares => ", userSquares);
 userSquares.forEach((square) =>
   square.addEventListener("dragstart", dragStart)
 );

@@ -21,12 +21,13 @@ a:hover {
 }
 
 h1 {
-  font-size: 3.2em;
+  font-size: 3em;
   line-height: 1.1;
 }
 .name-game {
   text-align: center;
   font-family: "Balsamiq Sans", sans-serif;
+  margin: 20px;
 }
 
 .container {
@@ -94,13 +95,14 @@ h1 {
 .battleship-container .battleship-area__area .name {
   text-transform: uppercase;
   text-align: center;
-  padding: 12px 0;
+  padding: 10px 0;
   margin-bottom: 20px;
   border-radius: 6px;
   letter-spacing: 1.2px;
   font-weight: 600;
   background-color: #717c96;
   color: white;
+  font-size: 15px;
 }
 .battleship-container .battleship-area__area.your-turn .name {
   background-color: #0364ee;

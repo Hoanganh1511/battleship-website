@@ -13,11 +13,7 @@ const io = new Server(server, {
 });
 
 type Point = { x: number; y: number };
-type DrawLine = {
-  prevPoint: Point | null;
-  currentPoint: Point;
-  color: string;
-};
+
 io.on("connection", (socket) => {
   socket.on("client-ready", () => {
     socket.broadcast.emit("get-canvas-state");
@@ -25,8 +21,8 @@ io.on("connection", (socket) => {
   socket.on("canvas-state", (state) => {
     socket.broadcast.emit("canvas-state-from-server", state);
   });
-  socket.on("draw-line", ({ prevPoint, currentPoint, color }: DrawLine) => {
-    socket.broadcast.emit("draw-line", { prevPoint, currentPoint, color });
+  socket.on("draw-line", () => {
+    // socket.broadcast.emit("draw-line", { prevPoint, currentPoint, color });
   });
 
   socket.on("clear", () => io.emit("clear"));
