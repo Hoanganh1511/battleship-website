@@ -64,7 +64,7 @@ const BattleshipGame = () => {
   ];
 
   useEffect(() => {
-    const createBoard = (squares, type) => {
+    const createBoard = (type) => {
       let newSquares = [];
       for (let i = 0; i < width * width; i++) {
         newSquares.push({
@@ -78,16 +78,16 @@ const BattleshipGame = () => {
       return newSquares;
     };
 
-    setUserSquares((prev) => createBoard(userSquares, "your"));
-    setComputerSquares(createBoard(computerSquares, "opponent"));
+    setUserSquares((prev) => createBoard("your"));
+    setComputerSquares(createBoard("opponent"));
   }, []);
   useEffect(() => {
     if (userSquares.length > 0) {
       socket.emit("client-ready");
-      socket.on("get-your-state", () => {
-        console.log("get-your-state");
-        socket.emit("your-state", userSquares);
-      });
+      // socket.on("get-your-state", () => {
+      //   console.log("get-your-state");
+      //   socket.emit("your-state", userSquares);
+      // });
       socket.on("fire", (state) => {
         // console.log("fire data =>", state);
         setComputerSquares(state);
@@ -149,7 +149,7 @@ const BattleshipGame = () => {
   };
   const playGameMulti = (socket) => {
     setupButtonsRef.current.style.display = "none";
-    if (isGameOver) return;
+    // if (isGameOver) return;
     if (!ready) {
       socket.emit("player-ready");
       setReady(true);
@@ -261,8 +261,13 @@ const BattleshipGame = () => {
       e.target.classList.add("active");
     }
   };
-  const player1Ready = () => {};
-  const player2Ready = () => {};
+  const player1Ready = () => {
+    // if (allShipsPlaced)
+    playGameMulti(socket);
+  };
+  const player2Ready = () => {
+    playGameMulti(socket);
+  };
   // const [bannedSquares, setBannedSquares] = useState([]);
   // const [killedShips, setKilledShips] = useState([]);
   // const [playerNum, setPlayerNum] = useState(null);
@@ -302,9 +307,11 @@ const BattleshipGame = () => {
             <span className="badge"></span>
             <span>Connected</span>
           </div>
-          <div className="ready" onClick={player1Ready}>
-            Ready
-          </div>
+          {currentPlayer === "user" && (
+            <div className="ready" onClick={player1Ready}>
+              Ready
+            </div>
+          )}
         </div>
         <div className="player p2">
           <label>Player 2</label>
@@ -315,9 +322,11 @@ const BattleshipGame = () => {
             <span>Connected</span>
             <span className="badge"></span>
           </div>
-          <div className="ready" onClick={player2Ready}>
-            Ready
-          </div>
+          {currentPlayer === "enermy" && (
+            <div className="ready" onClick={player2Ready}>
+              Ready
+            </div>
+          )}
         </div>
       </div>
 
