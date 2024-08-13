@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from "react";
-
+import { io } from "socket.io-client";
+const socket = io("http://localhost:3001");
 const BattleshipGame = () => {
   const [userSquares, setUserSquares] = useState([]);
   const [computerSquares, setComputerSquares] = useState([]);
@@ -12,7 +13,16 @@ const BattleshipGame = () => {
   // const [direction, setDirection] = useState(null);
   const [bannedSquares, setBannedSquares] = useState([]);
   const [killedShips, setKilledShips] = useState([]);
+  const playerNum = useRef(null);
+  const [enemyReady, setEnemyReady] = useState(false);
+  const [currentPlayer, setCurrentPlayer] = useState("user");
+  const [ready, setReady] = useState(false);
+  const [isGameOver, setGameOver] = useState(false);
   const displayGridRef = useRef(null);
+  const setupButtonsRef = useRef(null);
+  // const turnDisplayRef = useRef(null);
+  const opponentTurnRef = useRef(null);
+  const yourTurnRef = useRef(null);
 
   const width = 10;
   const shipArray = [
@@ -68,9 +78,104 @@ const BattleshipGame = () => {
       return newSquares;
     };
 
-    setUserSquares(createBoard(userSquares, "your"));
+    setUserSquares((prev) => createBoard(userSquares, "your"));
     setComputerSquares(createBoard(computerSquares, "opponent"));
   }, []);
+  useEffect(() => {
+    if (userSquares.length > 0) {
+      socket.emit("client-ready");
+      socket.on("get-your-state", () => {
+        console.log("get-your-state");
+        socket.emit("your-state", userSquares);
+      });
+      socket.on("fire", (state) => {
+        // console.log("fire data =>", state);
+        setComputerSquares(state);
+      });
+      socket.on("player-number", (num) => {
+        console.log("player-number =>", num);
+        if (num === -1) {
+          alert("Server is full");
+        } else {
+          console.log("player num =>", parseInt(num));
+          playerNum.current = parseInt(num);
+          if (parseInt(num) === 1) {
+            setCurrentPlayer("enemy");
+          }
+          socket.emit("check-players");
+        }
+      });
+      // Another player has connected or disconnected
+      socket.on("player-connection", (num) => {
+        console.log(`Player number ${num} has connected or disconnected`);
+        playerConnectedOrDisconnected(num);
+      });
+      // On enemy ready
+      socket.on("enemy-ready", (num) => {
+        setEnemyReady(true);
+        console.log("enemy-ready", num);
+        playerReady(num);
+        if (ready) {
+          playGameMulti(socket);
+          setupButtonsRef.current.style.display = "none";
+        }
+      });
+      socket.on("check-players", (players) => {
+        console.log("players =>", players);
+        players.forEach((p, i) => {
+          if (p.connected) playerConnectedOrDisconnected(i);
+          if (p.ready) {
+            playerReady(i);
+            if (i !== playerReady) setEnemyReady(true);
+          }
+        });
+      });
+    }
+  }, [userSquares]);
+
+  const playerConnectedOrDisconnected = (num) => {
+    let player = `.p${parseInt(num) + 1}`;
+    console.log("class =>", player);
+    document.querySelector(`${player} .connected`).classList.toggle("active");
+    console.log("123", parseInt(num), playerNum.current);
+    if (parseInt(num) === playerNum.current) {
+      const curr = document.querySelector(player);
+      curr.style.fontWeight = "bold";
+    }
+  };
+  const playerReady = (num) => {
+    let player = `.p${parseInt(num) + 1}`;
+    document.querySelector(`${player} .ready`).classList.toggle("active");
+  };
+  const playGameMulti = (socket) => {
+    setupButtonsRef.current.style.display = "none";
+    if (isGameOver) return;
+    if (!ready) {
+      socket.emit("player-ready");
+      setReady(true);
+      console.log("player num logic multi =>", playerNum.playerNum);
+      playerReady(playerNum.playerNum);
+    }
+    if (enemyReady) {
+      if (currentPlayer === "user") {
+        yourTurnRef.current.style.color = "red";
+      }
+      if (currentPlayer === "enemy") {
+        opponentTurnRef.current.style.color = "red";
+      }
+    }
+  };
+
+  const onFire = (e, position) => {
+    const newComputerSquares = [...computerSquares].map((item) => {
+      if (item.id === position.id) {
+        item.classList.push("attacked");
+      }
+      return item;
+    });
+    setComputerSquares((prev) => newComputerSquares);
+    socket.emit("fire", newComputerSquares);
+  };
 
   const handleMouseDown = (e) => {
     setSelectedShipNameWithIndex(e.target.id);
@@ -156,31 +261,71 @@ const BattleshipGame = () => {
       e.target.classList.add("active");
     }
   };
-
+  const player1Ready = () => {};
+  const player2Ready = () => {};
+  // const [bannedSquares, setBannedSquares] = useState([]);
+  // const [killedShips, setKilledShips] = useState([]);
+  // const [playerNum, setPlayerNum] = useState(null);
+  // const [enemyReady, setEnemyReady] = useState(false);
+  // const [currentPlayer, setCurrentPlayer] = useState("user");
+  // const [ready, setReady] = useState(false);
+  // const [isGameOver, setGameOver] = useState(false);
+  // const displayGridRef = useRef(null);
+  // const setupButtonsRef = useRef(null);
   return (
     <div className="container">
+      <div>Player Num : {playerNum.current}</div>
+      <div>Current Player: {currentPlayer}</div>
+      <div>Ready: {ready ? "ready" : "not ready"}</div>
+      <div>Enemy Ready: {enemyReady ? "ready" : "not ready"}</div>
+      <div className="container hidden-info">
+        <div className="setup-buttons" id="setup-buttons" ref={setupButtonsRef}>
+          <button id="start" className="btn">
+            Start Game
+          </button>
+          <button id="rotate" className="btn">
+            Rotate Your Ships
+          </button>
+        </div>
+        {/* <h3 id="whose-go" ref={turnDisplayRef} className="info-text">
+          Your Go
+        </h3> */}
+        <h3 id="info" className="info-text"></h3>
+      </div>
       <div className="header">
         <div className="player p1">
           <label>Player 1</label>
+          <div>
+            <input className="" placeholder="Tên TK" />
+          </div>
           <div className="connected">
             <span className="badge"></span>
             <span>Connected</span>
           </div>
-          <div className="ready">Ready</div>
+          <div className="ready" onClick={player1Ready}>
+            Ready
+          </div>
         </div>
         <div className="player p2">
           <label>Player 2</label>
+          <div>
+            <input className="" placeholder="Tên TK" />
+          </div>
           <div className="connected">
             <span>Connected</span>
             <span className="badge"></span>
           </div>
-          <div className="ready">Ready</div>
+          <div className="ready" onClick={player2Ready}>
+            Ready
+          </div>
         </div>
       </div>
 
       <div className="battleship-container">
         <div className="battleship-area__area your-turn">
-          <div className="name">Your Turn</div>
+          <div ref={yourTurnRef} className="name">
+            Your Turn
+          </div>
           <div className="battleship-grid grid-user">
             {userSquares &&
               userSquares.map((square, id) => {
@@ -289,11 +434,18 @@ const BattleshipGame = () => {
           </div>
         </div>
         <div className="battleship-area__area opponent-turn">
-          <div className="name">Opponent Turn</div>
+          <div ref={opponentTurnRef} className="name">
+            Opponent Turn
+          </div>
           <div className="battleship-grid grid-computer">
             {computerSquares.map((square, id) => {
               return (
-                <div className={square.classList.join(" ")} key={id} id={id}>
+                <div
+                  onClick={(e) => onFire(e, square)}
+                  className={square.classList.join(" ")}
+                  key={id}
+                  id={id}
+                >
                   <img className="aim-icon" src="aim-2.png" />
                 </div>
               );

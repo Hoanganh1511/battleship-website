@@ -60,7 +60,9 @@ h1 {
   align-items: center;
   gap: 8px;
 }
-
+.header > .player > .connected.active {
+  color: blue;
+}
 .header > .player > .connected .badge {
   width: 10px;
   height: 10px;
@@ -172,6 +174,9 @@ h1 {
   border-radius: 4px;
   box-shadow: 0 0 6px 1px inset;
   cursor: url("");
+}
+.square.opponent-square.attacked {
+  background: blue !important;
 }
 .square.opponent-square {
   display: flex;
