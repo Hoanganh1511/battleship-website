@@ -10,36 +10,43 @@ const io = new Server(server, {
     origin: "*",
   },
 });
-
+const account1 = {
+  username: "anhht",
+  password: 123456,
+};
+const account2 = {
+  username: "tutv",
+  password: 123456,
+};
+let connections = [null, null];
+let playerIndex = -1;
 io.on("connection", (socket) => {
-  let connections = [null, null];
-  let playerIndex = -1;
-  // for (const i in connections) {
-  //   if (connections[i] === null) {
-  //     console.log(i);
-  //     playerIndex = Number(i);
-  //     break;
-  //   }
-  // }
-  for (let i = 0; i < connections.length; i++) {
+  for (const i in connections) {
     if (connections[i] === null) {
-      console.log(i, playerIndex);
-      playerIndex = i;
+      console.log("index =>", i);
+      playerIndex = Number(i);
       break;
     }
   }
   socket.emit("player-number", playerIndex);
-  console.log(`Player ${playerIndex} has connected`);
+
   if (playerIndex === -1) return;
-  // connections[playerIndex] = false;
-  socket.broadcast.emit("player-connection", playerIndex);
-  console.log(connections);
+  connections[playerIndex] = false;
+
   socket.on("client-ready", () => {
-    socket.emit("get-your-state");
+    // socket.emit("get-your-state");
   });
   socket.on("your-state", (state) => {
     // console.log("your-state", state);
     // socket.broadcast.emit("canvas-state-from-server", state);
+  });
+  socket.broadcast.emit("player-connection", playerIndex);
+
+  socket.on("disconnect", () => {
+    console.log(`Player ${playerIndex} disconnected !`);
+    connections[playerIndex] = null;
+    // Tell everyone what player number just disconnected
+    socket.broadcast.emit("player-connection", playerIndex);
   });
 
   socket.on("fire", (state) => {
@@ -49,12 +56,13 @@ io.on("connection", (socket) => {
   socket.on("player-ready", () => {
     console.log("player ready");
     socket.broadcast.emit("enemy-ready", playerIndex);
-    console.log("enemy ready =>", playerIndex);
+
     connections[playerIndex] = true;
+    console.log("connections Index =>", connections);
   });
   socket.on("check-players", () => {
     const players = [];
-    console.log("check connections =>", connections[0]);
+    // console.log("check connections =>", connections[0]);
     for (const i in connections) {
       console.log("check i =>", i, connections);
       connections[i] === null

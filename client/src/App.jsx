@@ -18,6 +18,8 @@ const BattleshipGame = () => {
   const [currentPlayer, setCurrentPlayer] = useState("user");
   const [ready, setReady] = useState(false);
   const [isGameOver, setGameOver] = useState(false);
+
+  const [accountLogin, setAccountLogin] = useState(null);
   const displayGridRef = useRef(null);
   const setupButtonsRef = useRef(null);
   // const turnDisplayRef = useRef(null);
@@ -107,13 +109,12 @@ const BattleshipGame = () => {
       });
       // Another player has connected or disconnected
       socket.on("player-connection", (num) => {
-        console.log(`Player number ${num} has connected or disconnected`);
-        playerConnectedOrDisconnected(num);
+        console.log(`Player number ${num + 1} has connected or disconnected`);
+        playerConnectedOrDisconnected(num + 1);
       });
       // On enemy ready
       socket.on("enemy-ready", (num) => {
         setEnemyReady(true);
-        console.log("enemy-ready", num);
         playerReady(num);
         if (ready) {
           playGameMulti(socket);
@@ -130,17 +131,25 @@ const BattleshipGame = () => {
           }
         });
       });
+      socket.on("fire", (id) => {
+        //
+      });
+      socket.on("fire-reply", (classList) => {
+        //
+      });
     }
-  }, [userSquares]);
+  }, [userSquares, ready]);
 
   const playerConnectedOrDisconnected = (num) => {
     let player = `.p${parseInt(num) + 1}`;
-    console.log("class =>", player);
-    document.querySelector(`${player} .connected`).classList.toggle("active");
-    console.log("123", parseInt(num), playerNum.current);
-    if (parseInt(num) === playerNum.current) {
-      const curr = document.querySelector(player);
-      curr.style.fontWeight = "bold";
+    // document.querySelector(`${player} .connected`).classList.toggle("active");
+    if (num === playerNum.current) {
+      console.log("class =>", player);
+      console.log("123", parseInt(num), playerNum.current);
+      if (parseInt(num) === playerNum.current) {
+        const curr = document.querySelector(player);
+        curr.style.fontWeight = "bold";
+      }
     }
   };
   const playerReady = (num) => {
@@ -150,11 +159,12 @@ const BattleshipGame = () => {
   const playGameMulti = (socket) => {
     setupButtonsRef.current.style.display = "none";
     // if (isGameOver) return;
+    console.log("ready", ready);
     if (!ready) {
       socket.emit("player-ready");
       setReady(true);
-      console.log("player num logic multi =>", playerNum.playerNum);
-      playerReady(playerNum.playerNum);
+      console.log("player num logic multi =>", playerNum.current);
+      playerReady(playerNum.current);
     }
     if (enemyReady) {
       if (currentPlayer === "user") {
@@ -262,21 +272,12 @@ const BattleshipGame = () => {
     }
   };
   const player1Ready = () => {
-    // if (allShipsPlaced)
     playGameMulti(socket);
   };
   const player2Ready = () => {
     playGameMulti(socket);
   };
-  // const [bannedSquares, setBannedSquares] = useState([]);
-  // const [killedShips, setKilledShips] = useState([]);
-  // const [playerNum, setPlayerNum] = useState(null);
-  // const [enemyReady, setEnemyReady] = useState(false);
-  // const [currentPlayer, setCurrentPlayer] = useState("user");
-  // const [ready, setReady] = useState(false);
-  // const [isGameOver, setGameOver] = useState(false);
-  // const displayGridRef = useRef(null);
-  // const setupButtonsRef = useRef(null);
+
   return (
     <div className="container">
       <div>Player Num : {playerNum.current}</div>
@@ -292,9 +293,7 @@ const BattleshipGame = () => {
             Rotate Your Ships
           </button>
         </div>
-        {/* <h3 id="whose-go" ref={turnDisplayRef} className="info-text">
-          Your Go
-        </h3> */}
+
         <h3 id="info" className="info-text"></h3>
       </div>
       <div className="header">
